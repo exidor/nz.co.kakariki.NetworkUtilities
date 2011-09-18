@@ -1,9 +1,11 @@
 package nz.co.nzc.networkutils.test;
 
 import static org.junit.Assert.assertTrue;
-import nz.co.nzc.networkutils.nbrmgt.Cell;
-import nz.co.nzc.networkutils.nbrmgt.PLMN;
-import nz.co.nzc.networkutils.nbrmgt.Sector.Strategy;
+import nz.co.nzc.networkutils.nbrmgt.NetworkManager;
+import nz.co.nzc.networkutils.nbrmgt.NetworkTestBuilder;
+import nz.co.nzc.networkutils.network.Cell;
+import nz.co.nzc.networkutils.network.PLMN;
+import nz.co.nzc.networkutils.network.Sector.Strategy;
 
 import org.junit.After;
 import org.junit.Before;
@@ -12,11 +14,11 @@ import org.junit.Test;
 public class BuildNetworkTest {
 
 	PLMN plmn;
-	BuildNetwork bn = new BuildNetwork();
+	NetworkTestBuilder bn = new NetworkTestBuilder();
 	
 	@Before
 	public void setUp() throws Exception {
-		this.plmn = BuildNetwork.generateNewTestPLMN();
+		this.plmn = NetworkTestBuilder.generateNewTestPLMN();
 	}
 
 	@After
@@ -29,8 +31,8 @@ public class BuildNetworkTest {
 		final int NLS = 35;
 		Strategy s = Strategy.Normal;
 		System.out.println("Test of "+s+" neighbouring strategy");
-		BuildNetwork.neighbourStrategy(plmn, s);
-		BuildNetwork.displayAll(plmn);
+		NetworkManager.neighbourStrategy(plmn, s);
+		NetworkManager.displayAll(plmn);
 		System.out.println("NL size. "+plmn.getRNC("ABC").getNodeBs().get(0).getSectors().get(0).getCells().get(0).getNeighbourList().size());
 		
 		assertTrue(plmn.getRNC("ABC").getNodeBs().get(0).getSectors().get(0).getCells().get(0).getNeighbourList().size()==NLS);
@@ -42,8 +44,8 @@ public class BuildNetworkTest {
 		final int NLS = 17;
 		Strategy s = Strategy.Peak;
 		System.out.println("Test of "+s+" neighbouring strategy");
-		BuildNetwork.neighbourStrategy(plmn, s);	
-		BuildNetwork.displayAll(plmn);
+		NetworkManager.neighbourStrategy(plmn, s);	
+		NetworkManager.displayAll(plmn);
 		System.out.println("NL size. "+plmn.getRNC("ABC").getNodeBs().get(0).getSectors().get(0).getCells().get(0).getNeighbourList().size());
 		
 		assertTrue(plmn.getRNC("ABC").getNodeBs().get(0).getSectors().get(0).getCells().get(0).getNeighbourList().size()==NLS);
@@ -54,7 +56,7 @@ public class BuildNetworkTest {
 	public void distanceRanking(){
 		Strategy s = Strategy.Normal;
 		System.out.println("Test of distance ranking");
-		BuildNetwork.neighbourStrategy(plmn, s);
+		NetworkManager.neighbourStrategy(plmn);
 		
 		Cell c = plmn.getRNC("ABC").getNodeBs().get(0).getSectors().get(0).getCells().get(0);
 		

@@ -36,6 +36,8 @@ public class DataArrayPRS implements DataArray{
 	private String tablename;
 	private String username;
 	private Calendar timestamp;
+	//private Strategy strategy;
+	
 	private int integritycolumn = -1;
 
 
@@ -65,7 +67,7 @@ public class DataArrayPRS implements DataArray{
 	 * TODO look at quicker way to do this using IC column sort or array.delete
 	 */
 	public List<List<String>> testIntegrity(List<List<String>> olddata){
-		List<List<String>> newdata = new ArrayList<List<String>>();
+		List<List<String>> newdata = new ArrayList<>();
 		for(List<String> row : olddata){
 			if (Integer.parseInt(row.get(integritycolumn).replace("%",""))==100)
 				newdata.add(row);
@@ -123,5 +125,13 @@ public class DataArrayPRS implements DataArray{
 	public void setUsername(String username){
 		this.username = username;
 	}
+	/*
+	public Strategy getStrategy() {
+		return strategy;
+	}
+	public void setStrategy(Strategy strategy) {
+		this.strategy = strategy;
+	}
+	*/
 
 }

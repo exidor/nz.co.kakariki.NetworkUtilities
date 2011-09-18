@@ -1,18 +1,21 @@
-package nz.co.nzc.networkutils.nbrmgt;
+package nz.co.nzc.networkutils.network;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import nz.co.nzc.networkutils.nbrmgt.Cell.CellType;
+import nz.co.nzc.networkutils.network.Cell.CellType;
 
-public class Sector {
+public class Sector extends Network {
 
-	private int secid;
-	public String name;
+	public static final String DEF_NM = "SectorName";
+	public static final String DEF_ADDR = "SectorAddress";
+	
 	public List<Cell> cells;
 	
 	public NodeB parent;
+	
+	public int azimuth;
 	
 	public Strategy strategy = Strategy.Normal;
 
@@ -33,11 +36,14 @@ public class Sector {
 	private EnumSet<CellType> xu21f2c = EnumSet.of(CellType.U21F2);
 	private EnumSet<CellType> xu21f3c = EnumSet.of(CellType.U21F3);
 	
-	public Sector(int secid){
-		this.setSecID(secid);		
+	public Sector(int id,String name){
+		super(id,name);		
 		this.cells = new ArrayList<>();
 	}
 	
+	public Sector(int id){
+		this(id,DEF_NM+id);
+	}
 	
 	public void addCell(Cell cell){
 		//if(cells.size()<6) 3x F1+F2+F3+G9+G18 etc
@@ -47,29 +53,13 @@ public class Sector {
 	
 	public Cell getCell(int cellid){
 		for(Cell cell : cells){
-			if (cellid == cell.getCellID()) return cell;
+			if (cellid == cell.getID()) return cell;
 		}
 		return null;
 	}
 	
 	public List<Cell> getCells(){
 		return cells;
-	}
-	
-	public NodeB getParent() {
-		return parent;
-	}
-
-	public void setParent(NodeB nodeb) {
-		this.parent = nodeb;
-	}
-
-	public int getSecID() {
-		return secid;
-	}
-
-	public void setSecID(int secid) {
-		this.secid = secid;
 	}
 	
 	public Strategy getStrategy() {
@@ -80,6 +70,14 @@ public class Sector {
 		this.strategy = strategy;
 	}
 	
+	public int getAzimuth() {
+		return azimuth;
+	}
+
+	public void setAzimuth(int azimuth) {
+		this.azimuth = azimuth;
+	}
+
 	/**
 	 * based on strategy and cell location [self/intra/inter] neighbour up matching 
 	 * physical cells
@@ -87,7 +85,7 @@ public class Sector {
 	 */
 	public void addNeighbourSector(Sector secnbr){
 		
-		switch (getParent().strategy){
+		switch (this.getStrategy()){
 		case Normal:
 			addNeighbourSectorNormal(secnbr);break;
 		case Peak:
@@ -109,31 +107,33 @@ public class Sector {
 	
 	
 	public void addNeighbourSectorPeak(Sector secnbr){
-		boolean self = this.parent==secnbr.parent;
+		//boolean self = this.getParent()==secnbr.getParent();//same nodeb
+		boolean self = this==secnbr;//same sector
 		for(Cell cell : this.getCells()){
-			for(Cell nbr : secnbr.cells){
+			for(Cell nbr : secnbr.getCells()){
 				if(cell!=nbr){
-					switch (cell.celltype){
+					CellType nct = nbr.getCellType();
+					switch (cell.getCellType()){
 					case G9:
-						if((self && sg9c.contains(nbr.celltype)) || xg9c.contains(nbr.celltype)) 
+						if((self && sg9c.contains(nct)) || xg9c.contains(nct)) 
 							cell.addNeighbourCell(nbr);
 						break;
 					case G18:
-						if((self && sg18c.contains(nbr.celltype)) || xg18c.contains(nbr.celltype)) 
+						if((self && sg18c.contains(nct)) || xg18c.contains(nct)) 
 							cell.addNeighbourCell(nbr);
 						break;
 					case U9:
 						break;
 					case U21F1:
-						if((self && su21f1c.contains(nbr.celltype)) || xu21f1c.contains(nbr.celltype)) 
+						if((self && su21f1c.contains(nct)) || xu21f1c.contains(nct)) 
 							cell.addNeighbourCell(nbr);
 						break;
 					case U21F2:
-						if((self && su21f2c.contains(nbr.celltype)) || xu21f2c.contains(nbr.celltype)) 
+						if((self && su21f2c.contains(nct)) || xu21f2c.contains(nct)) 
 							cell.addNeighbourCell(nbr);
 						break;
 					case U21F3:
-						if((self && su21f3c.contains(nbr.celltype)) || xu21f3c.contains(nbr.celltype)) 
+						if((self && su21f3c.contains(nct)) || xu21f3c.contains(nct)) 
 							cell.addNeighbourCell(nbr);
 						break;
 					}
@@ -143,6 +143,6 @@ public class Sector {
 	}
 	
 	public String toString(){
-		return "S:"+String.valueOf(this.secid);
+		return "S:"+this.getID()+"/"+this.getStrategy();
 	}
 }

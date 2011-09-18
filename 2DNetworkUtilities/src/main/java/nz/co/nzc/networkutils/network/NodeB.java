@@ -1,28 +1,32 @@
-package nz.co.nzc.networkutils.nbrmgt;
+package nz.co.nzc.networkutils.network;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import nz.co.nzc.networkutils.nbrmgt.Sector.Strategy;
+import nz.co.nzc.networkutils.network.Sector.Strategy;
 
-import com.google.api.gbase.client.Location;
-
-public class NodeB {
+public class NodeB extends Network {
+	
+	public static final String DEF_NM = "NodeBName";
+	public static final String DEF_ADDR = "NodeBAddress";
+		
+	
 	public Location location;
 
-	private int nodebid;
-	public String name,address;
+	public String address;
 	public List<Sector> sectors;
 	
 	public Strategy strategy = Strategy.Normal;	
 	
-	public NodeB(int nodebid, String name, String address){
-		this.setNodeBID(nodebid);
-		this.name = name;
-		this.address = address;
-		this.location = new Location(address);
-		
+	
+	public NodeB(int id,String name){
+		super(id,name);
 		this.sectors = new ArrayList<>();
+		this.location = new Location(address);
+	}
+	
+	public NodeB(int id){
+		this(id,DEF_NM+id);
 	}
 	
 	
@@ -32,9 +36,9 @@ public class NodeB {
 		sector.setParent(this);
 	}
 	
-	public Sector getSector(int secid){
+	public Sector getSector(int id){
 		for(Sector sector : sectors){
-			if (secid == sector.getSecID()) return sector;
+			if (id == sector.getID()) return sector;
 		}
 		return null;
 	}
@@ -51,14 +55,14 @@ public class NodeB {
 		this.location = location;
 	}
 
-	public int getNodeBID() {
-		return nodebid;
+	public int getID() {
+		return id;
 	}
 
 	public void setNodeBID(int nodebid) {
-		this.nodebid = nodebid;
+		this.id = nodebid;
 	}
-	
+/*	
 	public Strategy getStrategy() {
 		return strategy;
 	}
@@ -66,8 +70,16 @@ public class NodeB {
 	public void setStrategy(Strategy strategy) {
 		this.strategy = strategy;
 	}
-	
+*/	
 	public String toString(){
-		return "N:"+this.nodebid+"/"+this.name+"/"+this.address;
+		return "N:"+this.getID()+"/"+this.getName()+"/"+this.getAddress();
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	
+	public String getAddress(){
+		return this.address;
 	}
 }

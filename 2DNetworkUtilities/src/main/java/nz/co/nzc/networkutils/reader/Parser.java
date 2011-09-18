@@ -15,6 +15,9 @@ package nz.co.nzc.networkutils.reader;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,13 +28,26 @@ public abstract class Parser {
 	protected List<DataArray> daplist;
 	
 	public Parser(String filename){
-		daplist = new ArrayList<DataArray>();
+		daplist = new ArrayList<>();
 		setFilename(filename);
+		
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream(this.filename);
+			readFile(fis);
+			fis.close();
+		} catch (FileNotFoundException fnfe) {
+			System.err.println("FNF (check path) ::"+fnfe);
+		} catch (IOException ioe) {
+			System.err.println("IO Error on close ::"+ioe);
+		}
 	}
 	
 	public void addDataArray(DataArray da){
 		daplist.add(da);
 	}
+	
+	public abstract void readFile(FileInputStream fis) throws IOException;
 	
 	public List<String> readCSLine(String values){
 		//System.out.println(values);
@@ -39,7 +55,7 @@ public abstract class Parser {
 		//if(values.endsWith(",")) values=values.concat("-");
 		//ArrayList<String> d = new ArrayList<String>(Arrays.asList(values.split(",",-1)));
 		//System.out.println(d);
-		return new ArrayList<String>(Arrays.asList(values.split(",",-1)));
+		return new ArrayList<>(Arrays.asList(values.split(",",-1)));
 	}
 
 	public void setFilename(String filename) {
