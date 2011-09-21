@@ -20,30 +20,30 @@ public class NetworkTestBuilder {
 				
 		NodeB N1 = new NodeB(2100,"SiteAlpha");
 		N1.setAddress("123 Alpha Street, Wellington");
-		N1.getLocation().setLatitude(-45.9d);
-		N1.getLocation().setLongitude(167.0d);
+		N1.getLocation().setLatitude(-41.27d);
+		N1.getLocation().setLongitude(174.71d);
 		
 		NodeB N2 = new NodeB(2200,"SiteBeta");
 		N2.setAddress("234 Beta Street, Wellington");
-		N2.getLocation().setLatitude(-45.2d);
-		N2.getLocation().setLongitude(167.4d);
+		N2.getLocation().setLatitude(-41.28d);
+		N2.getLocation().setLongitude(174.72d);
 		
 		NodeB N3 = new NodeB(2300,"SiteGamma");
 		N3.setAddress("345 Gamma Street, Wellington");
-		N3.getLocation().setLatitude(-45.4d);
-		N3.getLocation().setLongitude(167.1d);
+		N3.getLocation().setLatitude(-41.26d);
+		N3.getLocation().setLongitude(174.73d);
 		
-		Sector S1N1 = new Sector(21001,"");
-		Sector S2N1 = new Sector(21002,"");
-		Sector S3N1 = new Sector(21003,"");
+		Sector S1N1 = new Sector(21001,"");S1N1.setAzimuth(60);
+		Sector S2N1 = new Sector(21002,"");S2N1.setAzimuth(180);
+		Sector S3N1 = new Sector(21003,"");S3N1.setAzimuth(300);
 		
-		Sector S1N2 = new Sector(22001,"");
-		Sector S2N2 = new Sector(22002,"");
-		Sector S3N2 = new Sector(22003,"");
+		Sector S1N2 = new Sector(22001,"");S1N2.setAzimuth(50);
+		Sector S2N2 = new Sector(22002,"");S2N2.setAzimuth(170);
+		Sector S3N2 = new Sector(22003,"");S3N2.setAzimuth(290);
 		
-		Sector S1N3 = new Sector(23001,"");
-		Sector S2N3 = new Sector(23002,"");
-		Sector S3N3 = new Sector(23003,"");
+		Sector S1N3 = new Sector(23001,"");S1N3.setAzimuth(10);
+		Sector S2N3 = new Sector(23002,"");S2N3.setAzimuth(130);
+		Sector S3N3 = new Sector(23003,"");S3N3.setAzimuth(250);
 	
 		//-----------------------------
 		Cell N1S1UF1 = new Cell(21007,"");N1S1UF1.setCellType(CellType.U21F1);

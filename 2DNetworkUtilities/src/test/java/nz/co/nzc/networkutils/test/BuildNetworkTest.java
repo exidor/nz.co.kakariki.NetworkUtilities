@@ -54,7 +54,7 @@ public class BuildNetworkTest {
 	
 	@Test
 	public void distanceRanking(){
-		Strategy s = Strategy.Normal;
+
 		System.out.println("Test of distance ranking");
 		NetworkManager.neighbourStrategy(plmn);
 		

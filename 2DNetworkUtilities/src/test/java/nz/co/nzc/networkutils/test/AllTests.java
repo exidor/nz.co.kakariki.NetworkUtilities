@@ -5,7 +5,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ BuildNetworkTest.class, ParseNbrListTest.class })
+@SuiteClasses({ BuildNetworkTest.class, ParseNbrListTest.class, InternalFunctionTest.class })
 public class AllTests {
 	
 }

@@ -6,6 +6,7 @@ import java.util.List;
 
 import nz.co.nzc.networkutils.network.Cell.CellType;
 
+import com.vividsolutions.jts.geom.Coordinate;
 public class Sector extends Network {
 
 	public static final String DEF_NM = "SectorName";
@@ -77,6 +78,10 @@ public class Sector extends Network {
 	public void setAzimuth(int azimuth) {
 		this.azimuth = azimuth;
 	}
+	
+	public Coordinate getSectorCoordinate(){
+		return((NodeB)this.getParent()).getLocation().projectedCoordinate(this.getAzimuth());
+	}
 
 	/**
 	 * based on strategy and cell location [self/intra/inter] neighbour up matching 
@@ -141,6 +146,8 @@ public class Sector extends Network {
 			}
 		}
 	}
+	
+
 	
 	public String toString(){
 		return "S:"+this.getID()+"/"+this.getStrategy();

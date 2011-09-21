@@ -103,14 +103,24 @@ public class Cell extends Network {
 		}
 
 		public double displacementCartesianPlane(Cell c1, Cell c2) {
-			double disp1 = Math.sqrt(Math.pow(((NodeB) this.cell.getParent().getParent()).getLocation().getLatitude()
-					- ((NodeB) c1.getParent().getParent()).getLocation().getLatitude(), 2)
-					+ Math.pow(((NodeB) this.cell.getParent().getParent()).getLocation().getLongitude()
-					- ((NodeB) c1.getParent().getParent()).getLocation().getLongitude(), 2));
-			double disp2 = Math.sqrt(Math.pow(((NodeB) this.cell.getParent().getParent()).getLocation().getLatitude()
-					- ((NodeB) c2.getParent().getParent()).getLocation().getLatitude(), 2)
-					+ Math.pow(((NodeB) this.cell.getParent().getParent()).getLocation().getLongitude()
-					- ((NodeB) c2.getParent().getParent()).getLocation().getLongitude(), 2));
+			double disp1 = Math.sqrt(
+					Math.pow(
+				    (((Sector) this.cell.getParent()).getSectorCoordinate().y
+				    -((Sector)        c1.getParent()).getSectorCoordinate().y),
+				    2)		+ 
+					Math.pow(
+					(((Sector) this.cell.getParent()).getSectorCoordinate().x
+					-((Sector)        c1.getParent()).getSectorCoordinate().x),
+					2));
+			double disp2 = Math.sqrt(
+					Math.pow(
+				    (((Sector) this.cell.getParent()).getSectorCoordinate().y
+				    -((Sector)        c2.getParent()).getSectorCoordinate().y),
+				    2)		+ 
+					Math.pow(
+					(((Sector) this.cell.getParent()).getSectorCoordinate().x
+					-((Sector)        c2.getParent()).getSectorCoordinate().x),
+					2));
 			return 1000 * (disp1 - disp2);
 
 		}
@@ -128,10 +138,10 @@ public class Cell extends Network {
 		}
 		public double displacementCartesianGeometry(Cell c1,Cell c2){
 			//System.out.println(">>>"+cell+":"+nbr+"-"+1000*(new Coordinate(clng,clat)).distance(new Coordinate(nlng,nlat)));
-			double disp1 = ((NodeB)this.cell.getParent().getParent()).getLocation().getCoordinate()
-					.distance(((NodeB)c1.getParent().getParent()).getLocation().getCoordinate());
-			double disp2 = ((NodeB)this.cell.getParent().getParent()).getLocation().getCoordinate()
-					.distance(((NodeB)c2.getParent().getParent()).getLocation().getCoordinate());
+			double disp1 = ((Sector)this.cell.getParent()).getSectorCoordinate()
+					.distance(((Sector)c1.getParent()).getSectorCoordinate());
+			double disp2 = ((Sector)this.cell.getParent()).getSectorCoordinate()
+					.distance(((Sector)c2.getParent()).getSectorCoordinate());
 			return 1000*(disp1-disp2);
 		}
 	}
