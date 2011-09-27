@@ -22,6 +22,7 @@ public class NetworkManager {
 		int ri = 0;
 		String rn = "";
 		Strategy strategy = Strategy.Normal;
+		int projection = 3395;
 		PLMN plmn = new PLMN(1, "2Degrees");
 		//RNC rnc = new RNC(1);
 		//plmn.addRNC(rnc);
@@ -52,6 +53,10 @@ public class NetworkManager {
 				}
 				if("Strategy".compareTo(row.get(0))==0) {
 					strategy = Strategy.valueOf(row.get(1));
+					continue;
+				}
+				if("Projection".compareTo(row.get(0))==0) {
+					projection = Integer.parseInt(row.get(1));
 					continue;
 				}
 				

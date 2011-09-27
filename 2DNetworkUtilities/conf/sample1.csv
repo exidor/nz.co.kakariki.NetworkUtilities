@@ -4,6 +4,7 @@
 #CellID, Longitude, Latitude,Azimuth,CellType
 Region SJH
 Strategy Normal
+Projection 3395
 #Test2
 11001,170.147,-45.023,60,G9
 11003,170.147,-45.023,180,G9

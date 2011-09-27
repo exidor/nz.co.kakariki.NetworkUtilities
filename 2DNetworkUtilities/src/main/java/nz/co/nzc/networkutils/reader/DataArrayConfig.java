@@ -39,6 +39,7 @@ public class DataArrayConfig implements DataArray{
 	private Calendar timestamp;
 	private Strategy strategy;
 	private String region;
+	private String projection;
 
 
 	@Override
@@ -124,6 +125,15 @@ public class DataArrayConfig implements DataArray{
 	}
 	
 	public String getRegion(){
+		return this.projection;
+	}
+	
+	public void setProjection(String projection) {
+		this.projection = projection;
+		
+	}
+	
+	public String getProjection(){
 		return this.region;
 	}
 

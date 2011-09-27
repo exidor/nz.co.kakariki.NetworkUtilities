@@ -62,6 +62,7 @@ public class ParserConfig extends Parser {
 		//Save Time :Wed Jun 15 12:01:31 NZST 2011 User name :Report Scheduled Task
 		Pattern pstr = Pattern.compile("^Strategy\\s+(.*)");
 		Pattern preg = Pattern.compile("^Region\\s+(.*)");
+		Pattern pprj = Pattern.compile("^Projection\\s+(.*)");
 		List<List<String>> data = new ArrayList<>();
 		BufferedReader in = new BufferedReader(new InputStreamReader(fis));
 		while( (line = in.readLine()) != null){
@@ -70,6 +71,7 @@ public class ParserConfig extends Parser {
 			
 			Matcher mreg = preg.matcher(line);
 			Matcher mstr = pstr.matcher(line);
+			Matcher mprj = pprj.matcher(line);
 			if(mstr.find()) {
 				//((DataArrayConfig)dac).setStrategy(Strategy.valueOf(mstr.group(1)));
 				data.add(new ArrayList<>(Arrays.asList("Strategy",mstr.group(1))));
@@ -77,6 +79,10 @@ public class ParserConfig extends Parser {
 			else if(mreg.find()){
 				//((DataArrayConfig)dac).setRegion(mreg.group(1));
 				data.add(new ArrayList<>(Arrays.asList("Region",mreg.group(1))));
+			}
+			else if(mprj.find()){
+				//((DataArrayConfig)dac).setRegion(mprj.group(1));
+				data.add(new ArrayList<>(Arrays.asList("Projection",mprj.group(1))));
 			}
 			else {
 				data.add(readCSLine(line));

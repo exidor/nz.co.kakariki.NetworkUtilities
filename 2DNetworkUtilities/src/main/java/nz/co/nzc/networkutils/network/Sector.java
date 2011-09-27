@@ -81,6 +81,7 @@ public class Sector extends Network {
 	
 	public Coordinate getSectorCoordinate(){
 		return((NodeB)this.getParent()).getLocation().projectedCoordinate(this.getAzimuth());
+		//return((NodeB)this.getParent()).getLocation().getCoordinate();
 	}
 
 	/**

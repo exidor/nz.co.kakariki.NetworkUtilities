@@ -29,6 +29,41 @@ public class PLMN extends Network {
 		return rncs;
 	}
 	
+	
+	//convenience subordinate getters 
+	
+	public List<NodeB> getNodeBs() {
+		List<NodeB> nodebs = new ArrayList<>();
+		for (RNC rnc : this.getRNCs()) {
+			nodebs.addAll(rnc.getNodeBs());
+		}
+		return nodebs;
+	}
+
+	public List<Sector> getSectors() {
+		List<Sector> sectors = new ArrayList<>();
+		for (RNC rnc : this.getRNCs()) {
+			for (NodeB nodeb : rnc.getNodeBs()) {
+				sectors.addAll(nodeb.getSectors());
+			}
+		}
+		return sectors;
+	}
+
+	public List<Cell> getCells() {
+		List<Cell> cells = new ArrayList<>();
+		for (RNC rnc : this.getRNCs()) {
+			for (NodeB nodeb : rnc.getNodeBs()) {
+				for (Sector sector : nodeb.getSectors()) {
+					cells.addAll(sector.getCells());
+				}
+			}
+		}
+		return cells;
+	}
+	
+	
+	
 	public String toString(){
 		return "P:"+this.name;
 	}
