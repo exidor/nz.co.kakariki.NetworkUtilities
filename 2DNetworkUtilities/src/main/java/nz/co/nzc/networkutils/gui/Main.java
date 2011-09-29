@@ -1,7 +1,22 @@
 package nz.co.nzc.networkutils.gui;
-
+/*
+ * This file is part of 2DNetworkUtilities.
+ *
+ * 2DNetworkUtilities is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as 
+ * published by the Free Software Foundation; either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * 2DNetworkUtilities is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+import nz.co.nzc.networkutils.map.CustomMapLayer;
 import nz.co.nzc.networkutils.map.MapFrame;
-import nz.co.nzc.networkutils.map.MapLayer;
 import nz.co.nzc.networkutils.nbrmgt.NetworkManager;
 import nz.co.nzc.networkutils.network.PLMN;
 
@@ -9,15 +24,17 @@ public class Main {
 
 
 	private PLMN plmn;
-	private MapLayer maplayer;
+	
+	private CustomMapLayer maplayer;
 	private MapFrame mapframe;
 	
 	public Main (){
 		//configure site data
-		plmn = readSiteData();
-		NetworkManager.neighbourStrategy(plmn);
+		setPLMN(readSiteData());
+		readNeighbourList();
+		//NetworkManager.neighbourStrategy(plmn);
 		
-		maplayer = new MapLayer("Neighbour List Editor", plmn);
+		maplayer = new CustomMapLayer("Neighbour List Editor", plmn);
 		
 		mapframe = new MapFrame(maplayer);
 
@@ -30,20 +47,27 @@ public class Main {
 	}
 	
 	public PLMN readSiteData(){
-		final String filename = "conf/sample1.csv";
+		final String filename = "conf/pncs.csv";
 		PLMN plmn = NetworkManager.readNetwork(filename);	
 		//NetworkManager.neighbourStrategy(plmn,Strategy.Peak);
 		return plmn;		
 	}
-	/*	
-	public MapLayer getMapLayer() {
-		return maplayer;
+	
+	public void readNeighbourList(){
+		final String filename = "conf/pnnl.csv";
+		NetworkManager.applyNeighbourList(plmn, NetworkManager.readNeighbourList(filename));	
+	}
+	
+	
+	public PLMN getPLMN() {
+		return plmn;
 	}
 
-	public void setMapLayer(MapLayer maplayer) {
-		this.maplayer = maplayer;
+	public void setPLMN(PLMN plmn) {
+		this.plmn = plmn;
 	}
-	*/
+	
+	
 	public static void main(String[] args) throws Exception {
 		
 		Main m = new Main();

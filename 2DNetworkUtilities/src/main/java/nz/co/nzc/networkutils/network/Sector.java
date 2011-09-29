@@ -1,5 +1,20 @@
 package nz.co.nzc.networkutils.network;
-
+/*
+ * This file is part of 2DNetworkUtilities.
+ *
+ * 2DNetworkUtilities is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as 
+ * published by the Free Software Foundation; either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * 2DNetworkUtilities is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -114,7 +129,7 @@ public class Sector extends Network {
 	
 	public void addNeighbourSectorPeak(Sector secnbr){
 		//boolean self = this.getParent()==secnbr.getParent();//same nodeb
-		boolean self = this==secnbr;//same sector
+		boolean self = this==secnbr;//self is true if secnbr arg is itself
 		for(Cell cell : this.getCells()){
 			for(Cell nbr : secnbr.getCells()){
 				if(cell!=nbr){
@@ -148,9 +163,40 @@ public class Sector extends Network {
 		}
 	}
 	
-
+	public void deleteNeighbour(Sector secnbr){
+		//boolean self = this==secnbr;//self is true if secnbr arg is itself
+		for(Cell cell : this.getCells()){
+			for(Cell nbr : secnbr.getCells()){
+				if(cell.getNeighbourList().contains(nbr)) cell.deleteNeighbour(nbr);
+			}
+		}
+	}
+	
+	//convenience method
+	public void clearNeighbourList(){
+		for (Cell cell : cells){
+			cell.clearNeighbourList();
+		}
+	}
 	
 	public String toString(){
 		return "S:"+this.getID()+"/"+this.getStrategy();
+	}
+
+	/**
+	 * convenience method to debug neighbour list changes
+	 * @return
+	 */
+	public String displayNeighbours() {
+		String nbrstr = "";
+		for(Cell cell : cells){
+			nbrstr += cell+",<->,";
+			for (Cell nbr : cell.getNeighbourList()){
+				nbrstr += nbr+",";
+			}
+			nbrstr += "\n";
+		}
+		return nbrstr;
+		
 	}
 }

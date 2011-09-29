@@ -1,5 +1,21 @@
 package nz.co.nzc.networkutils.map;
-
+/*
+ * This file is part of 2DNetworkUtilities and has been adapted from 
+ * JMapFrame written by the Geotools project (geotools.org)
+ *
+ * 2DNetworkUtilities is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as 
+ * published by the Free Software Foundation; either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * 2DNetworkUtilities is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -99,7 +115,7 @@ public class JCustomMapFrame extends JFrame {
     private MapLayerTable mapLayerTable;
     private JToolBar toolBar;
     private StatusBar statusBar;
-    private JPanel messagepane;
+    private JScrollPane scrollpane;
     private JTextArea message;
 
     private boolean showStatusBar;
@@ -169,7 +185,7 @@ public class JCustomMapFrame extends JFrame {
         mapPane.setMapContext(context);
         mapPane.setRenderer(renderer);
         
-        messagepane = new JPanel();
+        //messagepane = new JPanel();
     }
 
     /**
@@ -276,7 +292,7 @@ public class JCustomMapFrame extends JFrame {
         }
         //sb.append("[grow]");
         if (showMessagePane) {
-            sb.append("[30px]"); // status bar height
+            sb.append("[30px]::"); // status bar height
         }
 
         JPanel panel = new JPanel(new MigLayout(
@@ -359,14 +375,16 @@ public class JCustomMapFrame extends JFrame {
         }
 
         if (showMessagePane) {
-            messagepane = new JPanel();
             message = new JTextArea(5,50);
             message.setEditable(false);
-            JScrollPane scrollpane = new JScrollPane(message);
-            scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-            scrollpane.setPreferredSize(new Dimension(100, 50));
-            panel.add(messagepane);
-            messagepane.add(message);          
+            scrollpane = new JScrollPane(message);
+            scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            scrollpane.setPreferredSize(new Dimension(1000, 100));
+            
+            
+            panel.add(scrollpane);
+         
             
         }
         

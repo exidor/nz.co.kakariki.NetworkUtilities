@@ -18,7 +18,6 @@ package nz.co.nzc.networkutils.reader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -28,7 +27,7 @@ import java.util.List;
  * @author Joseph Ramsay
  *
  */
-public class DataArrayCME implements DataArray{
+public class DataArrayNeighbour implements DataArray{
 
 	private List<String> head;
 	private List<List<String>> data;
@@ -44,6 +43,7 @@ public class DataArrayCME implements DataArray{
 	}
 	public void setHead(List<String> head){
 		this.head = head;
+
 	}
 
 	@Override
@@ -54,18 +54,6 @@ public class DataArrayCME implements DataArray{
 	public void setData(List<List<String>> data){
 		this.data = data;
 		setRecords(this.data.size());
-	}
-
-	/**
-	 * rebuild of data array to eliminate incomplete rows. PRS is special
-	 * @return
-	 * TODO look at quicker way to do this using IC column sort or array.delete
-	 */
-	public List<List<String>> testIntegrity(List<List<String>> olddata){
-		List<List<String>> newdata = new ArrayList<>();
-		for(List<String> row : olddata)
-				newdata.add(row);
-		return newdata;
 	}
 
 	@Override

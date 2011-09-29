@@ -1,5 +1,20 @@
 package nz.co.nzc.networkutils.network;
-
+/*
+ * This file is part of 2DNetworkUtilities.
+ *
+ * 2DNetworkUtilities is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as 
+ * published by the Free Software Foundation; either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * 2DNetworkUtilities is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import org.apache.log4j.Logger;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -15,7 +30,7 @@ public class Location {
 	public static final double DEF_XOFFSET = 84135.15;
 	public static final double DEF_YOFFSET = 111053.88;
 	
-	public static final float DEF_RADIUS = 50.0f;//50m sector radius
+	public static final float DEF_RADIUS = 200.0f;//50m sector radius
 	
 	private Coordinate coordinate;
 	

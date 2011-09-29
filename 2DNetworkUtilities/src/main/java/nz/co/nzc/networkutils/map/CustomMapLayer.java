@@ -1,10 +1,26 @@
 package nz.co.nzc.networkutils.map;
-
+/*
+ * This file is part of 2DNetworkUtilities.
+ *
+ * 2DNetworkUtilities is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as 
+ * published by the Free Software Foundation; either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * 2DNetworkUtilities is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 
 import nz.co.nzc.networkutils.network.Cell;
 import nz.co.nzc.networkutils.network.NodeB;
@@ -17,7 +33,6 @@ import org.geotools.data.FileDataStore;
 import org.geotools.data.FileDataStoreFinder;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
@@ -26,11 +41,11 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.map.DefaultMapContext;
 import org.geotools.map.MapContext;
+import org.geotools.map.MapLayer;
 import org.geotools.styling.Style;
-import org.geotools.styling.StyleFactory;
+import org.geotools.swing.styling.JSimpleStyleDialog.GeomType;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.filter.FilterFactory2;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -133,8 +148,9 @@ import com.vividsolutions.jts.geom.Point;
     AXIS["Easting",EAST],
     AXIS["Northing",NORTH]]
  */
-public class MapLayer {
-	private static final int SRID = 3395;
+public class CustomMapLayer {
+	
+	public static final int SRID = 27200;//3395;
 	
     private static final Color LINE_COLOUR = Color.BLUE;
     private static final Color FILL_COLOUR = Color.CYAN;
@@ -143,7 +159,7 @@ public class MapLayer {
     private static final float LINE_WIDTH = 1.0f;
     private static final float POINT_SIZE = 10.0f;
 
-	public static final String coast  = "map/10m_coastline.shp"; 
+	public static final String coast  = "map/Coastline_region.shp";//"map/10m_coastline.shp"; 
 	public static final String land   = "map/10m_land.shp"; 
 	public static final String ocean  = "map/10m_ocean.shp"; 
 	public static final String island = "map/10m_minor_islands.shp"; 
@@ -151,88 +167,115 @@ public class MapLayer {
 	public static final String rail   = "map/10m_railroads.shp"; 
 	public static final String urban  = "map/10m_urban_areas.shp"; 
 	
-	private SimpleFeatureType NODEB_TYPE, SECTOR_TYPE, CELL_TYPE, NEIGHBOUR_TYPE;
+	//private SimpleFeatureType NODEB_TYPE, SECTOR_TYPE, CELL_TYPE, NEIGHBOUR_TYPE;
 	
+	public enum MapFeatureType {
+		NodeB(0,"Point","id:Integer,nameString",GeomType.POINT),
+		Sector(1,"LineString","node:Integer",GeomType.LINE),
+		Cell(2,"Point","cellid:Integer,name:String,azimuth:Integer,type:String",GeomType.POINT),
+		Neighbour(3,"LineString","soure:Integer,target:Integer",GeomType.LINE);
+		
+		private int index;
+		private String shape;
+		private String fields;
+		private GeomType geomtype;
+		
+		MapFeatureType(int index,String shape,String fields,GeomType geomtype){
+			this.index = index;
+			this.shape = shape;
+			this.fields = fields;
+			this.geomtype = geomtype;
+		}
+		
+		public int getIndex(){return this.index;}
+		public String getShape(){return this.shape;}
+		public String getFields(){return this.fields;}
+		public GeomType getGeomType(){return this.geomtype;}
+		
+		public String getGeoName(){return this+this.getShape();}
+		
+		public SimpleFeatureType getFeatureType(){
+			try {
+				return DataUtilities.createType(getGeoName(),getGeoName().toLowerCase()+":"+getShape()+":srid="+SRID+","+getFields());
+			} catch (SchemaException se) {
+				System.err.println("Can't build Feature Type using proposed schema"+se);
+				System.exit(1);
+			}
+			return null;
+		}
+	}
 	
-    private StyleFactory sf = CommonFactoryFinder.getStyleFactory(null);
-    private FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(null);
+    //private StyleFactory sf = CommonFactoryFinder.getStyleFactory(null);
+    //private FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(null);
     
 	private MapContext map;
-	//private JMapFrame mapframe;
+
     private SimpleFeatureSource featureSource;
 	
 	//private String geometryAttributeName;
     //private GeomType geometryType;
     
-    private Map<String, FeatureStylePair> fspl;
+    private Map<MapFeatureType, FeatureStylePair> fspl;
     private PLMN plmn;
 
-	public MapLayer (String maptitle,PLMN plmn){
+	public CustomMapLayer (String maptitle,PLMN plmn){
 		setPLMN(plmn);
 		map = new DefaultMapContext();
 		//map.setCoordinateReferenceSystem(DefaultGeographicCRS.WGS84);
 		map.setTitle(maptitle);
 		
+		/*
 		try {
-			this.init();
-			//this.staticLayers();
-		} catch (SchemaException e){//| IOException e) {
+			//this.init();
+			this.staticLayers();
+		} catch (IOException e) {//|SchemaException e){
 			System.err.println("Cannot initialise map layer ::"+e);
 			System.exit(1);
 		}
+		*/
 		
-		
-		//add layers to map
-		 //p = new Pair();
 		fspl = new HashMap<>();
 		
-		fspl.put("NodeB",new FeatureStylePair(mapNodeBList(plmn),          NodeBDisplayStyle.getPointStyle()));
-		fspl.put("Sector", new FeatureStylePair(mapSectorList(plmn),       NodeBDisplayStyle.getLineStyle()));
-		fspl.put("Cell", new FeatureStylePair(mapCellList(plmn),           SectorDisplayStyle.getPointStyle()));
-		fspl.put("Neighbour", new FeatureStylePair(mapNeighbourList(plmn), SectorDisplayStyle.getLineStyle()));
-		
-		for(FeatureStylePair fsp : fspl.values()){
-			map.addLayer(fsp.getFeatureCollection(),fsp.getStyle());
-		}		
+		fspl.put(MapFeatureType.NodeB,     new FeatureStylePair(mapNodeBList(plmn),     NodeBDisplayStyle.getPointStyle()));
+		fspl.put(MapFeatureType.Sector,    new FeatureStylePair(mapSectorList(plmn),    NodeBDisplayStyle.getLineStyle()));
+		fspl.put(MapFeatureType.Cell,      new FeatureStylePair(mapCellList(plmn),      SectorDisplayStyle.getPointStyle()));
+		fspl.put(MapFeatureType.Neighbour, new FeatureStylePair(mapNeighbourList(plmn), SectorDisplayStyle.getLineStyle()));
+
+
+		TreeSet<MapFeatureType> keys = new TreeSet<>(fspl.keySet());
+		for (MapFeatureType key : keys) { 
+		   FeatureStylePair fsp = fspl.get(key);
+		   MapLayer ml = new MapLayer(fsp.getFeatureCollection(),fsp.getStyle());
+		   map.addLayer(key.getIndex(), ml);
+		}
 		
 	}
 	
-	/**
-	 * 
-	 * SRID=4326 : WGS84
-	 * @throws SchemaException
-	 */
-	private void init() throws SchemaException{
+	public void updateFeatureStylePair(MapFeatureType key, PLMN plmn){
+		//put replaces entry with the same id
+		FeatureStylePair fsp = null;
+		switch (key) {
+		case NodeB: 
+			fsp = new FeatureStylePair(mapNodeBList(plmn),NodeBDisplayStyle.getPointStyle());break;
+		case Sector:
+			fsp = new FeatureStylePair(mapSectorList(plmn),NodeBDisplayStyle.getLineStyle());break;
+		case Cell: 
+			fsp = new FeatureStylePair(mapCellList(plmn),SectorDisplayStyle.getPointStyle());break;
+		case Neighbour: 
+			fsp = new FeatureStylePair(mapNeighbourList(plmn),SectorDisplayStyle.getLineStyle());break;
+		}
+		fspl.put(key, fsp); 
+		updateMap(key, fsp);
 		
-			NODEB_TYPE = DataUtilities.createType(
-					"NodeBPoint",
-			        "nodebpoint:Point:srid="+SRID+"," + // Geometry, Point(Coordinate)
-			        "id:Integer," +               // NodeB ID
-			        "name:String"                 // NodeB Name
-				);
-			
-			CELL_TYPE = DataUtilities.createType(
-					"CellPoint",
-		            "cellpoint:Point:srid="+SRID+"," + // Geometry, Point(Coordinate)
-		            "cellid:Integer," +           // Cell ID
-		            "name:String," +              // Cell Name
-		            "azimuth:Integer," +          // Antennae Azimuth
-		            "type:String"                 // Cell Tech/Freq
-				);
-			
-			SECTOR_TYPE = DataUtilities.createType(
-					"SectorLine",
-			        "sectorline:LineString:srid="+SRID+"," + // Geometry, Point(Coordinate)
-			        "node:Integer"                     // Sector ID
-				);
-			//4326
-			NEIGHBOUR_TYPE = DataUtilities.createType(
-					"NeighbourLine",
-			        "neighbourline:LineString:srid="+SRID+"," + // Geometry, Point(Coordinate)
-			        "soure:Integer," +                 // Cell ID
-			        "target:Integer"                   // Cell ID
-				);
-	} 
+		
+	}
+	private void updateMap(MapFeatureType key, FeatureStylePair fsp){
+		map.removeLayer(key.getIndex());
+		MapLayer ml = new MapLayer(fsp.getFeatureCollection(),fsp.getStyle());
+		map.addLayer(key.getIndex(), ml);
+		
+	}
+
 	
 	@SuppressWarnings("rawtypes")
 	public void staticLayers() throws IOException {
@@ -262,17 +305,12 @@ public class MapLayer {
         */
        GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));
 
-       SimpleFeatureBuilder cellbuilder = new SimpleFeatureBuilder(CELL_TYPE);
+       SimpleFeatureBuilder cellbuilder = new SimpleFeatureBuilder(MapFeatureType.Cell.getFeatureType());
   
        for(Cell cell : plmn.getCells()){
        	//Point p = geofactory.createPoint(((Sector)cell.getParent()).getSectorCoordinate());
        	//for some reason using raw coordinates reverses LAT and LNG
-       	Point p = geofactory.createPoint(
-       			((Sector)cell.getParent()).getSectorCoordinate());
-       			//new Coordinate(
-       			//((Sector)cell.getParent()).getSectorCoordinate().x,
-       			//((Sector)cell.getParent()).getSectorCoordinate().y
-       			//));
+       	Point p = geofactory.createPoint(((Sector)cell.getParent()).getSectorCoordinate());
        	cellbuilder.add(p);
        	cellbuilder.add(cell.getID());
        	cellbuilder.add(cell.getName());
@@ -296,17 +334,12 @@ public class MapLayer {
        */
       GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));
 
-      SimpleFeatureBuilder nodebbuilder = new SimpleFeatureBuilder(NODEB_TYPE);
+      SimpleFeatureBuilder nodebbuilder = new SimpleFeatureBuilder(MapFeatureType.NodeB.getFeatureType());
  
       for(NodeB nodeb : plmn.getNodeBs()){
       	//Point p = geofactory.createPoint(((Sector)cell.getParent()).getSectorCoordinate());
       	//for some reason using raw coordinates reverses LAT and LNG
-    	Point p = geofactory.createPoint(
-    			nodeb.getLocation().getCoordinate());
-      			//new Coordinate(
-      			//nodeb.getLocation().getCoordinate().x,
-      			//nodeb.getLocation().getCoordinate().y
-      			//));
+    	Point p = geofactory.createPoint(nodeb.getLocation().getCoordinate());
       	nodebbuilder.add(p);
       	nodebbuilder.add(nodeb.getID());
       	nodebbuilder.add(nodeb.getName());
@@ -336,12 +369,9 @@ public class MapLayer {
      
      /* GeometryFactory to create the geometry attribute of each feature ie Point.
       */
-     GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));
-
-     //SimpleFeatureBuilder neighbourbuilder = new SimpleFeatureBuilder(builder.buildFeatureType());
+     GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));     
      
-     
-     SimpleFeatureBuilder neighbourbuilder = new SimpleFeatureBuilder(NEIGHBOUR_TYPE);
+     SimpleFeatureBuilder neighbourbuilder = new SimpleFeatureBuilder(MapFeatureType.Neighbour.getFeatureType());
 
      
      //if cant-get-map-bounds type errors occur, check you are generating actual lines/nbrs exist
@@ -353,14 +383,6 @@ public class MapLayer {
 	    	Coordinate[] cc = {
 	    			((Sector)cell.getParent()).getSectorCoordinate(),
 	    			((Sector)nbr.getParent()).getSectorCoordinate()};
-	    			//new Coordinate(
-	    			//		((Sector)cell.getParent()).getSectorCoordinate().x,
-	    			//		((Sector)cell.getParent()).getSectorCoordinate().y
-	    			//		),
-	    			//new Coordinate(
-	    	    	//		((Sector)nbr.getParent()).getSectorCoordinate().x,
-	    	    	//		((Sector)nbr.getParent()).getSectorCoordinate().y
-	    	    	//		)};
 	  
 	    	LineString ls = geofactory.createLineString(cc);
 	    	
@@ -368,7 +390,7 @@ public class MapLayer {
 	      	neighbourbuilder.add(cell.getID());
 	      	neighbourbuilder.add(nbr.getID());
 	      	
-	      	SimpleFeature feature = neighbourbuilder.buildFeature(String.valueOf(cell.getID()+nbr.getID()));
+	      	SimpleFeature feature = neighbourbuilder.buildFeature(String.valueOf(cell.getID()+":"+nbr.getID()));
 	        collection.add(feature);
    	  	}
      	
@@ -382,20 +404,12 @@ public class MapLayer {
 
 		GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));
 
-		SimpleFeatureBuilder neighbourbuilder = new SimpleFeatureBuilder(SECTOR_TYPE);
+		SimpleFeatureBuilder neighbourbuilder = new SimpleFeatureBuilder(MapFeatureType.Sector.getFeatureType());
 
 		for(Sector sector : plmn.getSectors()){   		
 	    	Coordinate[] cc = {
 	    			((NodeB)sector.getParent()).getLocation().getCoordinate(),
 	    			sector.getSectorCoordinate()};
-	    			//new Coordinate(
-	    			//		((NodeB)sector.getParent()).getLocation().getCoordinate().x,
-	    			//		((NodeB)sector.getParent()).getLocation().getCoordinate().y
-	    			//		),
-	    			//new Coordinate(
-	    	    	//		sector.getSectorCoordinate().x,
-	    	    	//		sector.getSectorCoordinate().y
-	    	    	//		)};
 	  
 	    	LineString ls = geofactory.createLineString(cc);
 	    	
@@ -418,11 +432,11 @@ public class MapLayer {
 		this.map = map;
 	}
 	
-	public Map<String, FeatureStylePair> getFeatureStylePairList() {
+	public Map<MapFeatureType, FeatureStylePair> getFeatureStylePairList() {
 		return fspl;
 	}
 
-	public void setFeatureStylePairList(Map<String, FeatureStylePair> fspl) {
+	public void setFeatureStylePairList(Map<MapFeatureType, FeatureStylePair> fspl) {
 		this.fspl = fspl;
 	}
 	
@@ -452,4 +466,5 @@ public class MapLayer {
 		
 		
 	}
+
 }
