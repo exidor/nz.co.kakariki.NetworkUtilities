@@ -1,4 +1,4 @@
-package nz.co.nzc.networkutils.map;
+package nz.co.nzc.networkutils.map.style;
 /*
  * This file is part of 2DNetworkUtilities.
  *
@@ -31,7 +31,7 @@ import org.geotools.styling.Style;
 import org.geotools.styling.StyleFactory;
 import org.opengis.filter.FilterFactory;
 
-public class SectorDisplayStyle {
+public class SectorDisplayStyle extends DisplayStyle {
 	
 	 static StyleFactory styleFactory = CommonFactoryFinder.getStyleFactory(null);
 	 static FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory(null);
@@ -40,7 +40,7 @@ public class SectorDisplayStyle {
      * Create a Style to draw polygon features with a thin blue outline and
      * a cyan fill
      */
-    private Style createPolygonStyle() {
+    protected Style createPolyStyle() {
 
         // create a partially opaque outline stroke
         Stroke stroke = styleFactory.createStroke(
@@ -71,9 +71,9 @@ public class SectorDisplayStyle {
     /**
      * Create a Style to draw line features as thin blue lines
      */
-    private static Style createLineStyle() {
+    protected Style createLineStyle(Color colour) {
         Stroke stroke = styleFactory.createStroke(
-                filterFactory.literal(Color.BLUE),
+                filterFactory.literal(colour),
                 filterFactory.literal(1));
 
         /*
@@ -90,21 +90,31 @@ public class SectorDisplayStyle {
 
         return style;
     }
+    
+    protected Style createNormalLineStyle(){
+    	return createLineStyle(SECTOR_LINE_NORMAL);
+    }
+    protected Style createHighlightLineStyle(){
+    	return createLineStyle(SECTOR_LINE_BRIGHT);
+    }
+    protected Style createSelectLineStyle(){
+    	return createLineStyle(SECTOR_LINE_SELECT);
+    }
 
     /**
      * Create a Style to draw point features as circles with blue outlines
      * and cyan fill
      */
-    private static Style createPointStyle() {
+    protected Style createPointStyle(Color colour) {
 
 		Graphic gr = styleFactory.createDefaultGraphic();
 
         Mark mark = styleFactory.getCircleMark();
 
         mark.setStroke(styleFactory.createStroke(
-                filterFactory.literal(Color.BLUE), filterFactory.literal(5)));
+                filterFactory.literal(colour), filterFactory.literal(5)));
 
-        mark.setFill(styleFactory.createFill(filterFactory.literal(Color.RED)));
+        mark.setFill(styleFactory.createFill(filterFactory.literal(colour)));
 
         gr.graphicalSymbols().clear();
         gr.graphicalSymbols().add(mark);
@@ -125,7 +135,11 @@ public class SectorDisplayStyle {
         return style;
     }
     
-    public static Style getPointStyle(){return createPointStyle();} 
-    public static Style getLineStyle(){return createLineStyle();}
+    protected Style createNormalPointStyle(){
+    	return createPointStyle(SECTOR_POINT_NORMAL);
+    }
+    protected Style createHighlightPointStyle(){
+    	return createPointStyle(SECTOR_POINT_BRIGHT);
+    }
  
 }

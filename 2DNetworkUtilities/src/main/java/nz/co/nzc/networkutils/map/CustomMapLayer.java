@@ -18,14 +18,18 @@ package nz.co.nzc.networkutils.map;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import nz.co.nzc.networkutils.network.Cell;
-import nz.co.nzc.networkutils.network.NodeB;
+import nz.co.nzc.networkutils.map.style.DisplayStyle;
+import nz.co.nzc.networkutils.map.style.DisplayStyle.StyleType;
+import nz.co.nzc.networkutils.map.style.NodeBDisplayStyle;
+import nz.co.nzc.networkutils.map.style.SectorDisplayStyle;
 import nz.co.nzc.networkutils.network.PLMN;
-import nz.co.nzc.networkutils.network.Sector;
 
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FeatureSource;
@@ -33,12 +37,10 @@ import org.geotools.data.FileDataStore;
 import org.geotools.data.FileDataStoreFinder;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.SchemaException;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.map.DefaultMapContext;
 import org.geotools.map.MapContext;
 import org.geotools.map.MapLayer;
@@ -46,11 +48,6 @@ import org.geotools.styling.Style;
 import org.geotools.swing.styling.JSimpleStyleDialog.GeomType;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Point;
 
 
 /* 
@@ -173,7 +170,8 @@ public class CustomMapLayer {
 		NodeB(0,"Point","id:Integer,nameString",GeomType.POINT),
 		Sector(1,"LineString","node:Integer",GeomType.LINE),
 		Cell(2,"Point","cellid:Integer,name:String,azimuth:Integer,type:String",GeomType.POINT),
-		Neighbour(3,"LineString","soure:Integer,target:Integer",GeomType.LINE);
+		Neighbour(3,"LineString","soure:Integer,target:Integer",GeomType.LINE),
+		Selection(4,"","",null);
 		
 		private int index;
 		private String shape;
@@ -215,12 +213,28 @@ public class CustomMapLayer {
 	//private String geometryAttributeName;
     //private GeomType geometryType;
     
-    private Map<MapFeatureType, FeatureStylePair> fspl;
+    private Map<MapFeatureType, List<FeatureStylePair>> fspl;
     private PLMN plmn;
+    
+    private DisplayStyle nodebstyle,sectorstyle;
 
+    private List<FeatureStylePair> selectioncollection;
+    
+    /**
+     * Main Construstor
+     * @param maptitle
+     * @param plmn
+     */
 	public CustomMapLayer (String maptitle,PLMN plmn){
 		setPLMN(plmn);
 		map = new DefaultMapContext();
+		
+		nodebstyle = new NodeBDisplayStyle();
+		sectorstyle = new SectorDisplayStyle();
+		
+		selectioncollection = new ArrayList<>();
+		//new FeatureStylePair(null,null);
+		
 		//map.setCoordinateReferenceSystem(DefaultGeographicCRS.WGS84);
 		map.setTitle(maptitle);
 		
@@ -236,43 +250,91 @@ public class CustomMapLayer {
 		
 		fspl = new HashMap<>();
 		
-		fspl.put(MapFeatureType.NodeB,     new FeatureStylePair(mapNodeBList(plmn),     NodeBDisplayStyle.getPointStyle()));
-		fspl.put(MapFeatureType.Sector,    new FeatureStylePair(mapSectorList(plmn),    NodeBDisplayStyle.getLineStyle()));
-		fspl.put(MapFeatureType.Cell,      new FeatureStylePair(mapCellList(plmn),      SectorDisplayStyle.getPointStyle()));
-		fspl.put(MapFeatureType.Neighbour, new FeatureStylePair(mapNeighbourList(plmn), SectorDisplayStyle.getLineStyle()));
+		
+		FeatureStylePair l4 = new FeatureStylePair(FeatureBuilder.mapSectorList(plmn),    nodebstyle.getLineStyle(StyleType.Highlight));
+		FeatureStylePair l3 = new FeatureStylePair(FeatureBuilder.mapNodeBList(plmn),     nodebstyle.getPointStyle(StyleType.Normal));
+		FeatureStylePair l2 = new FeatureStylePair(FeatureBuilder.mapSectorList(plmn),    nodebstyle.getLineStyle(StyleType.Normal));
+		FeatureStylePair l1 = new FeatureStylePair(FeatureBuilder.mapCellList(plmn),      sectorstyle.getPointStyle(StyleType.Normal));
+		FeatureStylePair l0 = new FeatureStylePair(FeatureBuilder.mapNeighbourList(plmn), sectorstyle.getLineStyle(StyleType.Normal));
+
+		
+		fspl.put(MapFeatureType.Selection, Arrays.asList(l4));
+		fspl.put(MapFeatureType.NodeB,     Arrays.asList(l3));
+		fspl.put(MapFeatureType.Sector,    Arrays.asList(l2));
+		fspl.put(MapFeatureType.Cell,      Arrays.asList(l1));
+		fspl.put(MapFeatureType.Neighbour, Arrays.asList(l0));
 
 
 		TreeSet<MapFeatureType> keys = new TreeSet<>(fspl.keySet());
 		for (MapFeatureType key : keys) { 
-		   FeatureStylePair fsp = fspl.get(key);
+		   FeatureStylePair fsp = fspl.get(key).get(0);
 		   MapLayer ml = new MapLayer(fsp.getFeatureCollection(),fsp.getStyle());
 		   map.addLayer(key.getIndex(), ml);
 		}
 		
 	}
 	
-	public void updateFeatureStylePair(MapFeatureType key, PLMN plmn){
+	public void updateFeatureStylePair(MapFeatureType fkey, StyleType skey, PLMN plmn){
+
 		//put replaces entry with the same id
 		FeatureStylePair fsp = null;
-		switch (key) {
+		switch (fkey) {
 		case NodeB: 
-			fsp = new FeatureStylePair(mapNodeBList(plmn),NodeBDisplayStyle.getPointStyle());break;
+			fsp = new FeatureStylePair(FeatureBuilder.mapNodeBList(plmn),nodebstyle.getPointStyle(skey));break;
 		case Sector:
-			fsp = new FeatureStylePair(mapSectorList(plmn),NodeBDisplayStyle.getLineStyle());break;
+			fsp = new FeatureStylePair(FeatureBuilder.mapSectorList(plmn),nodebstyle.getLineStyle(skey));break;
 		case Cell: 
-			fsp = new FeatureStylePair(mapCellList(plmn),SectorDisplayStyle.getPointStyle());break;
+			fsp = new FeatureStylePair(FeatureBuilder.mapCellList(plmn),sectorstyle.getPointStyle(skey));break;
 		case Neighbour: 
-			fsp = new FeatureStylePair(mapNeighbourList(plmn),SectorDisplayStyle.getLineStyle());break;
+			fsp = new FeatureStylePair(FeatureBuilder.mapNeighbourList(plmn),sectorstyle.getLineStyle(skey));break;
 		}
-		fspl.put(key, fsp); 
-		updateMap(key, fsp);
+		fspl.put(fkey, Arrays.asList(fsp)); 
+		updateMap(fkey, Arrays.asList(fsp));
 		
 		
 	}
-	private void updateMap(MapFeatureType key, FeatureStylePair fsp){
-		map.removeLayer(key.getIndex());
+	
+	public void updateSelectionStylePair(MapFeatureType key, List<SimpleFeature> lsf, StyleType style){//, PLMN plmn){
+		
+		//create a new collection to represent the selection layer
+		SimpleFeatureCollection collection = FeatureCollections.newCollection();
+		
+		//look through the existing layers (not the multiple selection layer) for the matching feature type
+		FeatureStylePair fsp = fspl.get(key).get(0);//Assumes a single layer
+		FeatureIterator<SimpleFeature> iter = fsp.getFeatureCollection().features();
+		while (iter.hasNext()){
+			SimpleFeature f = iter.next();
+			for (SimpleFeature s : lsf){
+			if(s.getID().compareTo(f.getID())==0)collection.add(f);
+			}
+		}
+		
+		switch (key){
+		case NodeB: 
+			selectioncollection.add(new FeatureStylePair(collection,nodebstyle.getPointStyle(style)));break;
+		case Sector:
+			selectioncollection.add(new FeatureStylePair(collection,nodebstyle.getLineStyle(style)));break;
+		case Cell: 
+			selectioncollection.add(new FeatureStylePair(collection,sectorstyle.getPointStyle(style)));break;
+		case Neighbour: 
+			selectioncollection.add(new FeatureStylePair(collection,sectorstyle.getLineStyle(style)));break;
+		}
+
+		fspl.put(MapFeatureType.Selection, selectioncollection);
+		for(FeatureStylePair layer : selectioncollection){
+		
+			updateMap(MapFeatureType.Selection, selectioncollection);
+		}
+	}
+	
+	
+	private void updateMap(MapFeatureType key, List<FeatureStylePair> lfsp){
+		if(map.getLayerCount()>key.getIndex())map.removeLayer(key.getIndex());
+		for(FeatureStylePair fsp : lfsp){
 		MapLayer ml = new MapLayer(fsp.getFeatureCollection(),fsp.getStyle());
+		
 		map.addLayer(key.getIndex(), ml);
+		}
 		
 	}
 
@@ -294,136 +356,6 @@ public class CustomMapLayer {
 
 	}
 	
-
-	public SimpleFeatureCollection mapCellList(PLMN plmn){
-		
-		 /*  FeatureCollection into which we will put each Feature matching a cell record
-         */
-       SimpleFeatureCollection collection = FeatureCollections.newCollection();
-       
-       /* GeometryFactory to create the geometry attribute of each feature ie Point.
-        */
-       GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));
-
-       SimpleFeatureBuilder cellbuilder = new SimpleFeatureBuilder(MapFeatureType.Cell.getFeatureType());
-  
-       for(Cell cell : plmn.getCells()){
-       	//Point p = geofactory.createPoint(((Sector)cell.getParent()).getSectorCoordinate());
-       	//for some reason using raw coordinates reverses LAT and LNG
-       	Point p = geofactory.createPoint(((Sector)cell.getParent()).getSectorCoordinate());
-       	cellbuilder.add(p);
-       	cellbuilder.add(cell.getID());
-       	cellbuilder.add(cell.getName());
-       	cellbuilder.add(((Sector)cell.getParent()).getAzimuth());
-       	cellbuilder.add(cell.getCellType().toString());
-       	
-       	SimpleFeature feature = cellbuilder.buildFeature(String.valueOf(cell.getID()));
-           collection.add(feature);
-       	
-       }
-       return collection;
-	}
-	
-	public SimpleFeatureCollection mapNodeBList(PLMN plmn){
-		
-		 /*  FeatureCollection into which we will put each Feature matching a cell record
-        */
-      SimpleFeatureCollection collection = FeatureCollections.newCollection();
-      
-      /* GeometryFactory to create the geometry attribute of each feature ie Point.
-       */
-      GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));
-
-      SimpleFeatureBuilder nodebbuilder = new SimpleFeatureBuilder(MapFeatureType.NodeB.getFeatureType());
- 
-      for(NodeB nodeb : plmn.getNodeBs()){
-      	//Point p = geofactory.createPoint(((Sector)cell.getParent()).getSectorCoordinate());
-      	//for some reason using raw coordinates reverses LAT and LNG
-    	Point p = geofactory.createPoint(nodeb.getLocation().getCoordinate());
-      	nodebbuilder.add(p);
-      	nodebbuilder.add(nodeb.getID());
-      	nodebbuilder.add(nodeb.getName());
-      	
-      	SimpleFeature feature = nodebbuilder.buildFeature(String.valueOf(nodeb.getID()));
-          collection.add(feature);
-      	
-      }
-      return collection;
-	}
-	
-	public SimpleFeatureCollection mapNeighbourList(PLMN plmn){
-		
-		 /*  FeatureCollection into which we will put each Feature matching a cell record
-       */
-     SimpleFeatureCollection collection = FeatureCollections.newCollection();
-     
-     /* another way to define feature types
-     SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-     builder.setName("Location");
-     builder.setCRS(DefaultGeographicCRS.WGS84);
-     
-     builder.add("location", LineString.class);
-     builder.length(15).add("source", Integer.class);
-     builder.length(15).add("target", Integer.class);
-     */
-     
-     /* GeometryFactory to create the geometry attribute of each feature ie Point.
-      */
-     GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));     
-     
-     SimpleFeatureBuilder neighbourbuilder = new SimpleFeatureBuilder(MapFeatureType.Neighbour.getFeatureType());
-
-     
-     //if cant-get-map-bounds type errors occur, check you are generating actual lines/nbrs exist
-     for(Cell cell : plmn.getCells()){
-    	 for(Cell nbr : cell.getNeighbourList()){
-	      	//Point p = geofactory.createPoint(((Sector)cell.getParent()).getSectorCoordinate());
-	      	//for some reason using raw coordinates reverses LAT and LNG
-   		
-	    	Coordinate[] cc = {
-	    			((Sector)cell.getParent()).getSectorCoordinate(),
-	    			((Sector)nbr.getParent()).getSectorCoordinate()};
-	  
-	    	LineString ls = geofactory.createLineString(cc);
-	    	
-	      	neighbourbuilder.add(ls);
-	      	neighbourbuilder.add(cell.getID());
-	      	neighbourbuilder.add(nbr.getID());
-	      	
-	      	SimpleFeature feature = neighbourbuilder.buildFeature(String.valueOf(cell.getID()+":"+nbr.getID()));
-	        collection.add(feature);
-   	  	}
-     	
-     }
-     return collection;
-	}
-	
-	public SimpleFeatureCollection mapSectorList(PLMN plmn){
-
-		SimpleFeatureCollection collection = FeatureCollections.newCollection();
-
-		GeometryFactory geofactory = JTSFactoryFinder.getGeometryFactory(new Hints(Hints.JTS_SRID,SRID));
-
-		SimpleFeatureBuilder neighbourbuilder = new SimpleFeatureBuilder(MapFeatureType.Sector.getFeatureType());
-
-		for(Sector sector : plmn.getSectors()){   		
-	    	Coordinate[] cc = {
-	    			((NodeB)sector.getParent()).getLocation().getCoordinate(),
-	    			sector.getSectorCoordinate()};
-	  
-	    	LineString ls = geofactory.createLineString(cc);
-	    	
-	      	neighbourbuilder.add(ls);
-	      	neighbourbuilder.add(sector.getID());
-	      	
-	      	SimpleFeature feature = neighbourbuilder.buildFeature(String.valueOf(((NodeB)sector.getParent()).getID()+sector.getID()));
-	        collection.add(feature);
-   	  
-     	
-		}
-		return collection;
-	}
-	
 	public MapContext getMap() {
 		return map;
 	}
@@ -432,11 +364,11 @@ public class CustomMapLayer {
 		this.map = map;
 	}
 	
-	public Map<MapFeatureType, FeatureStylePair> getFeatureStylePairList() {
+	public Map<MapFeatureType, List<FeatureStylePair>> getFeatureStylePairList() {
 		return fspl;
 	}
 
-	public void setFeatureStylePairList(Map<MapFeatureType, FeatureStylePair> fspl) {
+	public void setFeatureStylePairList(Map<MapFeatureType, List<FeatureStylePair>> fspl) {
 		this.fspl = fspl;
 	}
 	

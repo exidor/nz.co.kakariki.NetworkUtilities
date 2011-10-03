@@ -30,6 +30,7 @@ import javax.swing.JLabel;
 import javax.swing.JToolBar;
 
 import nz.co.nzc.networkutils.map.CustomMapLayer.MapFeatureType;
+import nz.co.nzc.networkutils.map.style.DisplayStyle.StyleType;
 import nz.co.nzc.networkutils.network.Cell;
 import nz.co.nzc.networkutils.network.NodeB;
 import nz.co.nzc.networkutils.network.Sector;
@@ -116,8 +117,13 @@ public class MapFrame {
                             @Override
                             public void onMouseClicked(MapMouseEvent ev) {
                             	//mapframe.setMessage("Neighbour list cleared. Select new Source");
-                                selectedneighbour.clear();
-                                selectSource(ev);
+                                setSelectedSector(selectSource(ev));
+                                if(getSelectedSector()!=null){
+                                	getSelectedNeighbour().clear();
+                                	List<SimpleFeature> ss = new ArrayList<SimpleFeature>();
+                                	ss.add(getSelectedSector());
+                                	getMapLayer().updateSelectionStylePair(MapFeatureType.Sector, ss, StyleType.Select);
+                                }
                             }
                         });
             }
@@ -132,9 +138,11 @@ public class MapFrame {
 
                             @Override
                             public void onMouseClicked(MapMouseEvent ev) {
-                            	if(selectedsector!=null){
-                            	//mapframe.setMessage("Select Target Sectors");
-                                selectTarget(ev);
+                            	if(getSelectedSector()!=null){
+                            		addSelectedNeighbour(selectTarget(ev));
+                            		if(getSelectedNeighbour().size()>0){
+                            			getMapLayer().updateSelectionStylePair(MapFeatureType.Sector, getSelectedNeighbour(), StyleType.Highlight);
+                            		}
                             	}
                             }
                         });
@@ -146,13 +154,13 @@ public class MapFrame {
         		System.out.println("Commit");
         		
         		//TODO fix funky last op selection
-            	if((lastop.compareTo("selectsource")==0 || lastop.compareTo("selecttarget")==0 ) && selectedneighbour!=null){
+            	if((lastop.compareTo("selectsource")==0 || lastop.compareTo("selecttarget")==0 ) && getSelectedNeighbour()!=null){
             		addNeighbours();
-            		getMapLayer().updateFeatureStylePair(MapFeatureType.Neighbour, getMapLayer().getPLMN());
+            		getMapLayer().updateFeatureStylePair(MapFeatureType.Neighbour, StyleType.Normal, getMapLayer().getPLMN());
             	}
-            	else if(lastop.compareTo("selectneighbour")==0 && selectedneighbour!=null){ 
+            	else if(lastop.compareTo("selectneighbour")==0 && getSelectedNeighbour()!=null){ 
             		deleteNeighbours();
-            		getMapLayer().updateFeatureStylePair(MapFeatureType.Neighbour, getMapLayer().getPLMN());
+            		getMapLayer().updateFeatureStylePair(MapFeatureType.Neighbour, StyleType.Normal, getMapLayer().getPLMN());
             	}
             	
             	mapframe.repaint();
@@ -197,7 +205,7 @@ public class MapFrame {
 	
 	//TODO make this more efficient
 	private void deleteNeighbours() {
-		for (SimpleFeature nbr : selectedneighbour) {
+		for (SimpleFeature nbr : getSelectedNeighbour()) {
 			String nbrid = nbr.getIdentifier().toString();
 			String part1 = nbrid.substring(0, nbrid.indexOf(":"));
 			String part2 = nbrid.substring(nbrid.indexOf(":")+1);
@@ -223,7 +231,7 @@ public class MapFrame {
 	}
 
 	private void addNeighbours(){
-		String sf = selectedsector.getIdentifier().toString();
+		String sf = getSelectedSector().getIdentifier().toString();
     	//match feature to sector and feature to neighbour
     	for (Sector sector : getMapLayer().getPLMN().getSectors()){
     		String sd = String.valueOf(((NodeB)sector.getParent()).getID()+sector.getID());
@@ -232,7 +240,7 @@ public class MapFrame {
     			System.out.println("BEFORE:\n"+sector.displayNeighbours());
     			sector.clearNeighbourList();
     			//System.out.print("SEC:"+sf);
-    			for(SimpleFeature nbr : selectedneighbour){
+    			for(SimpleFeature nbr : getSelectedNeighbour()){
     				String nf = nbr.getIdentifier().toString();
     				//nesting getting deep TODO something about it
     				for(Sector neighbour : getMapLayer().getPLMN().getSectors()){
@@ -255,8 +263,10 @@ public class MapFrame {
      *
      * @param pos map (world) coordinates of the mouse cursor
      */
-    public void selectSource(MapMouseEvent ev) {
+    public SimpleFeature selectSource(MapMouseEvent ev) {
 
+    	SimpleFeature sf = null;
+    	
     	MapFeatureType selection = MapFeatureType.Sector;
         //System.out.println("Mouse click at: " + ev.getMapPosition());
 
@@ -285,9 +295,9 @@ public class MapFrame {
         		message = "No Sector selected";
         	}
         	else {
-        		selectedneighbour.clear();//ATTN probably a better place to clear the local NL
-        		selectedsector = selected.features().next();
-        		message = "Source:"+selectedsector.getIdentifier();
+        		//selectedneighbour.clear();//ATTN the is probably a better place to clear the local NL
+        		sf = selected.features().next();
+        		message = "Source:"+sf.getIdentifier();
         		
         	}
         	mapframe.setMessage(message);
@@ -295,10 +305,10 @@ public class MapFrame {
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            return;
+            return null;
         }
         lastop = "selectsource";
-        return;
+        return sf;
     }
     
     /**
@@ -307,8 +317,9 @@ public class MapFrame {
      *
      * @param pos map (world) coordinates of the mouse cursor
      */
-    public void selectTarget(MapMouseEvent ev) {
+    public SimpleFeature selectTarget(MapMouseEvent ev) {
 
+    	SimpleFeature lsf = null;
     	MapFeatureType selection = MapFeatureType.Sector;
     	
         System.out.println("Mouse click at: " + ev.getMapPosition());
@@ -355,24 +366,25 @@ public class MapFrame {
         	}
         	else {
         		//selectedneighbour.clear();
-        		selectedneighbour.add(selected.features().next());
+        		lsf = selected.features().next();
         		message = "Target: "+selected.features().next().getIdentifier();
         		
         	}
         	
-        	String msg = "Source:"+selectedsector.getIdentifier()+" - Target{";
-        	for(SimpleFeature sf : selectedneighbour){
-        		msg += sf.getIdentifier()+",";
+        	String msg = "Source:"+getSelectedSector().getIdentifier()+" - Target{";
+        	for(SimpleFeature sf : getSelectedNeighbour()){
+        		msg += sf.getID()+",";
         	}
-        	msg = msg.substring(0,msg.length()-1);
+        	msg += lsf.getID();
+        	//msg = msg.substring(0,msg.length()-1);
         	mapframe.setMessage(msg+"}");
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            return;
+            return null;
         }
         lastop = "selecttarget";
-        return;
+        return lsf;
         
     }
        
@@ -405,10 +417,10 @@ public class MapFrame {
         		message = "Multiple Neighbours lines selected, "+selected.size();
         		SimpleFeatureIterator iter = selected.features();
         		try {
-        			selectedneighbour.clear();
+        			getSelectedNeighbour().clear();//ATTN do this here?
                     while (iter.hasNext()) {
                     	SimpleFeature sf = iter.next();
-                    	selectedneighbour.add(sf);
+                    	getSelectedNeighbour().add(sf);
                         //ids.add(sf.getIdentifier());
                     }
 
@@ -421,7 +433,7 @@ public class MapFrame {
         	}
 
         	String msg = "Neighbours: [";
-        	for(SimpleFeature sf : selectedneighbour){
+        	for(SimpleFeature sf : getSelectedNeighbour()){
         		msg += sf.getID()+",";
         	}
         	msg = msg.substring(0,msg.length()-1);
@@ -437,8 +449,9 @@ public class MapFrame {
     }
     
     
+    //TODO loop fspl layer list not just get(0)
    private FeatureCollection getFeatureCollection(MapFeatureType featuretype){
-	   return getMapLayer().getFeatureStylePairList().get(featuretype).getFeatureCollection();
+	   return getMapLayer().getFeatureStylePairList().get(featuretype).get(0).getFeatureCollection();
    }
 
     
@@ -459,6 +472,26 @@ public class MapFrame {
 
 	public void setMapLayer(CustomMapLayer maplayer) {
 		this.maplayer = maplayer;
+	}
+
+	public SimpleFeature getSelectedSector() {
+		return selectedsector;
+	}
+
+	public void setSelectedSector(SimpleFeature selectedsector) {
+		this.selectedsector = selectedsector;
+	}
+
+	public List<SimpleFeature> getSelectedNeighbour() {
+		return selectedneighbour;
+	}
+
+	public void setSelectedNeighbour(List<SimpleFeature> selectedneighbour) {
+		this.selectedneighbour = selectedneighbour;
+	}
+	
+	public void addSelectedNeighbour(SimpleFeature neighbour) {
+		this.selectedneighbour.add(neighbour);
 	}
 
     
