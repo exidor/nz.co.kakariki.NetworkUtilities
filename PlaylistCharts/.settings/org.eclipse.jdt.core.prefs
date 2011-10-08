@@ -1,5 +1,6 @@
-#Wed Oct 05 23:00:03 NZDT 2011
+#Sat Oct 08 13:55:57 NZDT 2011
 eclipse.preferences.version=1
 org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.5
 org.eclipse.jdt.core.compiler.compliance=1.5
+org.eclipse.jdt.core.compiler.problem.forbiddenReference=warning
 org.eclipse.jdt.core.compiler.source=1.5

@@ -6,6 +6,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>PlaylistCharts</name>
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<junit.version>4.9</junit.version>
 		<log4j.version>1.2.16</log4j.version>
 		<postgresql.version>9.0-801.jdbc4</postgresql.version>
@@ -53,7 +55,7 @@
 		</resources>
 	</build>
 	<organization>
-		<name>PoJoJoJo</name>
+		<name>SlowJoe</name>
 		<url>https://sites.google.com/site/jnramsay/</url>
 	</organization>
 </project>
