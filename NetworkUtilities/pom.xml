@@ -8,56 +8,59 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<junit.version>4.9</junit.version>
+		<junit.version>4.10</junit.version>
 		<log4j.version>1.2.16</log4j.version>
-		<postgresql.version>9.0-801.jdbc4</postgresql.version>
-		<gdata-maps.version>1.0.10-alpha</gdata-maps.version>
-		<gdata-base.version>1.0.10-alpha</gdata-base.version>
-		<commons-compress.version>1.2</commons-compress.version>
+		<postgresql.version>9.1-901.jdbc4</postgresql.version>
+		<commons-compress.version>1.4</commons-compress.version>
 		<jts.version>1.12</jts.version>
+		<swingx.version>1.6.1</swingx.version>
+		<jface.version>3.0.1</jface.version>
 		<geotools.version>2.7.2</geotools.version>
+		<google-api-client.version>1.2.3-alpha</google-api-client.version>
+		<google-api-datamaps.version>1.0.10-alpha</google-api-datamaps.version>
+		<google-api-datagbase.version>1.0.10-alpha</google-api-datagbase.version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.9</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>1.2.16</version>
+			<version>${log4j.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>9.0-801.jdbc4</version>
+			<version>${postgresql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.api.client</groupId>
 			<artifactId>google-api-client</artifactId>
-			<version>1.0.10-alpha</version>
+			<version>${google-api-client.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.api.client</groupId>
 			<artifactId>google-api-data-maps-v2</artifactId>
-			<version>1.0.10-alpha</version>
+			<version>${google-api-datamaps.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.api.client</groupId>
 			<artifactId>google-api-data-gbase-v2</artifactId>
-			<version>1.0.10-alpha</version>
+			<version>${google-api-datagbase.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.2</version>
+			<version>${commons-compress.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -69,7 +72,7 @@
 		<dependency>
 			<groupId>com.vividsolutions</groupId>
 			<artifactId>jts</artifactId>
-			<version>1.12</version>
+			<version>${jts.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -99,12 +102,12 @@
 		<dependency>
 			<groupId>org.swinglabs</groupId>
 			<artifactId>swingx</artifactId>
-			<version>1.6.1</version>
+			<version>${swingx.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>swt</groupId>
 			<artifactId>jface</artifactId>
-			<version>3.0.1</version>
+			<version>${jface.version}</version>
 		</dependency>
 	</dependencies>
 	<repositories>
